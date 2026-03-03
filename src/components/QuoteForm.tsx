@@ -27,6 +27,7 @@ const TERMS_OPTIONS = [
 ];
 
 interface Client { id: string; name: string; company?: string | null }
+interface Company { id: string; name: string; is_default?: boolean }
 
 export default function QuoteForm({
   mode,
@@ -39,6 +40,7 @@ export default function QuoteForm({
 }) {
   const router = useRouter();
   const [clients, setClients] = useState<Client[]>([]);
+  const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(false);
   const [customTerms, setCustomTerms] = useState(false);
 
@@ -48,6 +50,7 @@ export default function QuoteForm({
   const [form, setForm] = useState({
     quote_number: initialData?.quote_number ?? defaultQuoteNumber ?? "",
     client_id: initialData?.client_id ?? "",
+    company_id: initialData?.company_id ?? "",
     date: initialData ? formatDateForInput(new Date(initialData.date)) : today,
     valid_until: initialData ? formatDateForInput(new Date(initialData.valid_until)) : thirtyDays,
     status: initialData?.status ?? "DRAFT",
@@ -73,7 +76,17 @@ export default function QuoteForm({
   );
 
   useEffect(() => {
-    fetch("/api/clients").then((r) => r.json()).then(setClients);
+    Promise.all([
+      fetch("/api/clients").then((r) => r.json()),
+      fetch("/api/companies").then((r) => r.json()),
+    ]).then(([c, co]) => {
+      setClients(c);
+      setCompanies(co);
+      if (!initialData?.company_id && co.length > 0) {
+        const def = co.find((c: Company) => c.is_default) ?? co[0];
+        setForm((f) => ({ ...f, company_id: def.id }));
+      }
+    });
   }, []);
 
   const round2 = (n: number) => Math.round(n * 100) / 100;
@@ -200,6 +213,13 @@ export default function QuoteForm({
                   { value: "ACCEPTED", label: "Accepted" },
                   { value: "REJECTED", label: "Rejected" },
                 ]}
+              />
+              <Select
+                label="Company"
+                value={form.company_id}
+                onChange={(e) => setForm((f) => ({ ...f, company_id: e.target.value }))}
+                options={companies.map((c) => ({ value: c.id, label: c.name }))}
+                placeholder="Select company..."
               />
             </CardContent>
           </Card>

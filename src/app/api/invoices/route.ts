@@ -67,6 +67,7 @@ export async function POST(req: NextRequest) {
     data: {
       invoice_number: body.invoice_number,
       client_id: body.client_id,
+      company_id: body.company_id ?? null,
       date: new Date(body.date),
       due_date: new Date(body.due_date),
       status: body.status ?? "DRAFT",

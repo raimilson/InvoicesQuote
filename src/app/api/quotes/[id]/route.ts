@@ -25,6 +25,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     where: { id },
     data: {
       client_id: body.client_id,
+      company_id: body.company_id ?? null,
       date: new Date(body.date),
       valid_until: new Date(body.valid_until),
       status: body.status,

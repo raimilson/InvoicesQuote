@@ -15,8 +15,18 @@ function fmtDate(d: string | Date): string {
   return `${dd}/${mm}/${yyyy}`;
 }
 
-function fmtCurrency(n: number): string {
+function fmtNum(n: number): string {
   return new Intl.NumberFormat("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
+}
+
+function fmtMoney(n: number, sym: string): string {
+  return sym + fmtNum(n);
+}
+
+const CURRENCY_SYM: Record<string, string> = { USD: "$", CAD: "CA$", EUR: "€", BRL: "R$" };
+
+function isIBAN(s: string): boolean {
+  return /^[A-Z]{2}\d{2}/.test(s.replace(/\s/g, ""));
 }
 
 const BLUE = "#2AABE2";
@@ -95,12 +105,21 @@ export interface BankTemplate {
   bank_address: string;
 }
 
+export interface CompanyInfo {
+  name: string;
+  address: string;
+  ein?: string | null;
+}
+
 export interface PDFProps {
   type: "INVOICE" | "QUOTE";
   number: string;
   date: string;
   dueDate?: string;
   validUntil?: string;
+  currency: string;
+  company: CompanyInfo;
+  logoSrc: string;
   client: { name: string; company?: string | null; address?: string | null; phone?: string | null; email?: string | null };
   lineItems: LineItem[];
   subtotal: number;
@@ -108,11 +127,13 @@ export interface PDFProps {
   total: number;
   notes?: string | null;
   paymentTerms?: string | null;
-  bankTemplate: BankTemplate;
+  bankTemplate?: BankTemplate | null;
 }
 
-export default function InvoicePDF({ type, number, date, dueDate, validUntil, client, lineItems, subtotal, tax, total, notes, paymentTerms, bankTemplate }: PDFProps) {
+export default function InvoicePDF({ type, number, date, dueDate, validUntil, currency, company, logoSrc, client, lineItems, subtotal, tax, total, notes, paymentTerms, bankTemplate }: PDFProps) {
   const termLines = (paymentTerms ?? "").split(/\n|;/).map((t) => t.trim()).filter(Boolean);
+  const sym = CURRENCY_SYM[currency] ?? "$";
+  const addressLines = company.address.split(",").map((l) => l.trim()).filter(Boolean);
 
   return (
     <Document>
@@ -121,10 +142,12 @@ export default function InvoicePDF({ type, number, date, dueDate, validUntil, cl
         {/* Header */}
         <View style={s.header}>
           <View style={s.companyBlock}>
-            <Image src="/logo.png" style={s.logo} />
-            <Text style={s.companyName}>Kezpo Solutions Inc</Text>
-            <Text style={s.companyDetail}>66 Kowalsky Cres, Winnipeg MB R3R3A8</Text>
-            <Text style={s.companyDetail}>raimilson@kezpo.ca  |  www.kezpo.ca</Text>
+            <Image src={logoSrc} style={s.logo} />
+            <Text style={s.companyName}>{company.name}</Text>
+            {addressLines.map((line, i) => (
+              <Text key={i} style={s.companyDetail}>{line}</Text>
+            ))}
+            {company.ein && <Text style={s.companyDetail}>EIN: {company.ein}</Text>}
           </View>
           <View style={s.titleBlock}>
             <Text style={s.titleText}>{type}</Text>
@@ -165,7 +188,7 @@ export default function InvoicePDF({ type, number, date, dueDate, validUntil, cl
             )}
             <View style={s.metaRow}>
               <Text style={s.metaLabel}>Currency:</Text>
-              <Text style={s.metaValue}>{bankTemplate.currency}</Text>
+              <Text style={s.metaValue}>{currency}</Text>
             </View>
           </View>
         </View>
@@ -186,8 +209,8 @@ export default function InvoicePDF({ type, number, date, dueDate, validUntil, cl
                 <Text style={[s.td, s.cNum]}>{item.item_number}</Text>
                 <Text style={[s.td, s.cDesc]}>{text}</Text>
                 <Text style={[s.td, s.cQty]}>{item.quantity}</Text>
-                <Text style={[s.td, s.cRate]}>{fmtCurrency(item.rate)}</Text>
-                <Text style={[s.td, s.cAmt]}>{fmtCurrency(item.amount)}</Text>
+                <Text style={[s.td, s.cRate]}>{fmtMoney(item.rate, sym)}</Text>
+                <Text style={[s.td, s.cAmt]}>{fmtMoney(item.amount, sym)}</Text>
               </View>
             );
           })}
@@ -197,17 +220,17 @@ export default function InvoicePDF({ type, number, date, dueDate, validUntil, cl
         <View style={s.totalsSection}>
           <View style={s.totRow}>
             <Text style={s.totLabel}>Sub Total</Text>
-            <Text style={s.totValue}>{fmtCurrency(subtotal)}</Text>
+            <Text style={s.totValue}>{fmtMoney(subtotal, sym)}</Text>
           </View>
           {tax != null && tax > 0 && (
             <View style={s.totRow}>
               <Text style={s.totLabel}>Tax</Text>
-              <Text style={s.totValue}>{fmtCurrency(tax)}</Text>
+              <Text style={s.totValue}>{fmtMoney(tax, sym)}</Text>
             </View>
           )}
           <View style={s.grandRow}>
             <Text style={s.grandLabel}>Total</Text>
-            <Text style={s.grandValue}>${fmtCurrency(total)}</Text>
+            <Text style={s.grandValue}>{fmtMoney(total, sym)}</Text>
           </View>
         </View>
 
@@ -230,20 +253,30 @@ export default function InvoicePDF({ type, number, date, dueDate, validUntil, cl
         )}
 
         {/* Bank Info */}
-        <View style={s.bankBox}>
-          <Text style={s.bankTitle}>Bank Information — {bankTemplate.name}</Text>
-          <View style={s.bankGrid}>
-            <View style={s.bankItem}><Text style={s.bankKey}>Bank:</Text><Text style={s.bankVal}>{bankTemplate.bank_name}</Text></View>
-            <View style={s.bankItem}><Text style={s.bankKey}>Account:</Text><Text style={s.bankVal}>{bankTemplate.account_number}</Text></View>
-            {bankTemplate.institution_no && <View style={s.bankItem}><Text style={s.bankKey}>Institution:</Text><Text style={s.bankVal}>{bankTemplate.institution_no}</Text></View>}
-            {bankTemplate.transit_no && <View style={s.bankItem}><Text style={s.bankKey}>Transit:</Text><Text style={s.bankVal}>{bankTemplate.transit_no}</Text></View>}
-            {bankTemplate.swift_bic && <View style={s.bankItem}><Text style={s.bankKey}>SWIFT/BIC:</Text><Text style={s.bankVal}>{bankTemplate.swift_bic}</Text></View>}
-            <View style={[s.bankItem, { width: "100%" }]}><Text style={s.bankKey}>Address:</Text><Text style={s.bankVal}>{bankTemplate.bank_address}</Text></View>
+        {bankTemplate && (
+          <View style={s.bankBox}>
+            <Text style={s.bankTitle}>Bank Information — {bankTemplate.name}</Text>
+            <View style={s.bankGrid}>
+              <View style={s.bankItem}><Text style={s.bankKey}>Bank:</Text><Text style={s.bankVal}>{bankTemplate.bank_name}</Text></View>
+              <View style={s.bankItem}>
+                <Text style={s.bankKey}>{isIBAN(bankTemplate.account_number) ? "IBAN:" : "Account:"}</Text>
+                <Text style={s.bankVal}>{bankTemplate.account_number}</Text>
+              </View>
+              {bankTemplate.institution_no && (
+                <View style={s.bankItem}>
+                  <Text style={s.bankKey}>{bankTemplate.currency === "USD" ? "Routing #:" : "Institution:"}</Text>
+                  <Text style={s.bankVal}>{bankTemplate.institution_no}</Text>
+                </View>
+              )}
+              {bankTemplate.transit_no && <View style={s.bankItem}><Text style={s.bankKey}>Transit:</Text><Text style={s.bankVal}>{bankTemplate.transit_no}</Text></View>}
+              {bankTemplate.swift_bic && <View style={s.bankItem}><Text style={s.bankKey}>SWIFT/BIC:</Text><Text style={s.bankVal}>{bankTemplate.swift_bic}</Text></View>}
+              <View style={[s.bankItem, { width: "100%" }]}><Text style={s.bankKey}>Address:</Text><Text style={s.bankVal}>{bankTemplate.bank_address}</Text></View>
+            </View>
           </View>
-        </View>
+        )}
 
         {/* Footer */}
-        <Text style={s.footer}>Thank you for doing business with us!  —  Kezpo Team</Text>
+        <Text style={s.footer}>Thank you for doing business with us!  —  {company.name}</Text>
 
       </Page>
     </Document>

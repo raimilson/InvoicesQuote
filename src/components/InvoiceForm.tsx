@@ -22,6 +22,7 @@ const TERMS_OPTIONS = [
 
 interface Client { id: string; name: string; company?: string | null }
 interface BankTemplate { id: string; name: string; currency: string; is_default?: boolean }
+interface Company { id: string; name: string; is_default?: boolean }
 
 export default function InvoiceForm({
   mode,
@@ -35,6 +36,7 @@ export default function InvoiceForm({
   const router = useRouter();
   const [clients, setClients] = useState<Client[]>([]);
   const [banks, setBanks] = useState<BankTemplate[]>([]);
+  const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(false);
   const [showNewClient, setShowNewClient] = useState(false);
   const [newClient, setNewClient] = useState({ name: "", company: "", phone: "", email: "", address: "" });
@@ -44,6 +46,7 @@ export default function InvoiceForm({
   const [form, setForm] = useState({
     invoice_number: initialData?.invoice_number ?? defaultInvoiceNumber ?? "",
     client_id: initialData?.client_id ?? "",
+    company_id: initialData?.company_id ?? "",
     date: initialData ? formatDateForInput(new Date(initialData.date)) : today,
     due_date: initialData ? formatDateForInput(new Date(initialData.due_date)) : today,
     status: initialData?.status ?? "DRAFT",
@@ -75,12 +78,18 @@ export default function InvoiceForm({
     Promise.all([
       fetch("/api/clients").then((r) => r.json()),
       fetch("/api/bank-templates").then((r) => r.json()),
-    ]).then(([c, b]) => {
+      fetch("/api/companies").then((r) => r.json()),
+    ]).then(([c, b, co]) => {
       setClients(c);
       setBanks(b);
+      setCompanies(co);
       if (!form.bank_template_id && b.length > 0) {
         const def = b.find((t: BankTemplate) => t.is_default) ?? b[0];
         setForm((f) => ({ ...f, bank_template_id: def.id }));
+      }
+      if (!form.company_id && co.length > 0) {
+        const def = co.find((c: Company) => c.is_default) ?? co[0];
+        setForm((f) => ({ ...f, company_id: def.id }));
       }
     });
   }, []);
@@ -253,6 +262,13 @@ export default function InvoiceForm({
                 onChange={(e) => setForm((f) => ({ ...f, bank_template_id: e.target.value }))}
                 options={banks.map((t) => ({ value: t.id, label: `${t.name} (${t.currency})` }))}
                 placeholder="Select bank..."
+              />
+              <Select
+                label="Company"
+                value={form.company_id}
+                onChange={(e) => setForm((f) => ({ ...f, company_id: e.target.value }))}
+                options={companies.map((c) => ({ value: c.id, label: c.name }))}
+                placeholder="Select company..."
               />
             </CardContent>
           </Card>

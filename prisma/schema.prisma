@@ -45,6 +45,17 @@ model User {
   updated_at DateTime @updatedAt
 }
 
+model Company {
+  id         String    @id @default(uuid())
+  name       String
+  address    String
+  ein        String?
+  is_default Boolean   @default(false)
+  invoices   Invoice[]
+  quotes     Quote[]
+  created_at DateTime  @default(now())
+}
+
 model Client {
   id         String    @id @default(uuid())
   name       String
@@ -79,6 +90,8 @@ model Quote {
   quote_number    String      @unique
   client          Client      @relation(fields: [client_id], references: [id])
   client_id       String
+  company         Company?    @relation(fields: [company_id], references: [id])
+  company_id      String?
   date            DateTime
   valid_until     DateTime
   status          QuoteStatus @default(DRAFT)
@@ -101,6 +114,8 @@ model Invoice {
   invoice_number   String        @unique
   client           Client        @relation(fields: [client_id], references: [id])
   client_id        String
+  company          Company?      @relation(fields: [company_id], references: [id])
+  company_id       String?
   from_quote       Quote?        @relation("QuoteToInvoice")
   date             DateTime
   due_date         DateTime

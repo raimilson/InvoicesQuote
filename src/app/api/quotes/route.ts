@@ -49,6 +49,7 @@ export async function POST(req: NextRequest) {
     data: {
       quote_number: body.quote_number,
       client_id: body.client_id,
+      company_id: body.company_id ?? null,
       date: new Date(body.date),
       valid_until: new Date(body.valid_until),
       status: body.status ?? "DRAFT",

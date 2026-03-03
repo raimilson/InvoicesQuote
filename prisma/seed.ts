@@ -20,42 +20,128 @@ async function main() {
     },
   });
 
-  // 1. Bank Templates
-  const wiseTemplate = await prisma.bankTemplate.upsert({
-    where: { id: "bt-wise-usd" },
-    update: {},
+  // 1. Companies
+  await prisma.company.upsert({
+    where: { id: "company-kezpo-solutions" },
+    update: {
+      name: "Kezpo Solutions Inc",
+      address: "66 Kowalsky Cres, Winnipeg, MB R3R3A8, Canada",
+      is_default: false,
+    },
     create: {
-      id: "bt-wise-usd",
-      name: "USD - Wise Canada",
-      currency: "USD",
+      id: "company-kezpo-solutions",
+      name: "Kezpo Solutions Inc",
+      address: "66 Kowalsky Cres, Winnipeg, MB R3R3A8, Canada",
+      is_default: false,
+    },
+  });
+
+  await prisma.company.upsert({
+    where: { id: "company-kezpo-llc" },
+    update: {
+      name: "Kezpo LLC",
+      address: "1021 E Lincolnway Suite #8933, Cheyenne, Wyoming 82001, United States",
+      ein: "32-0823412",
+      is_default: true,
+    },
+    create: {
+      id: "company-kezpo-llc",
+      name: "Kezpo LLC",
+      address: "1021 E Lincolnway Suite #8933, Cheyenne, Wyoming 82001, United States",
+      ein: "32-0823412",
+      is_default: true,
+    },
+  });
+
+  // 2. Bank Templates
+  // CAD – Wise Canada (Kezpo LLC)
+  await prisma.bankTemplate.upsert({
+    where: { id: "bt-wise-usd" },
+    update: {
+      name: "CAD – Kezpo LLC (Wise Canada)",
+      currency: "CAD",
       account_number: "200110250929",
       institution_no: "621",
       transit_no: "16001",
       swift_bic: "TRWICAW1XXX",
       bank_name: "Wise Payments Canada Inc.",
       bank_address: "99 Bank Street, Suite 1420, Ottawa, ON, K1P 1H4, Canada",
-      is_default: true,
+      is_default: false,
     },
-  });
-
-  await prisma.bankTemplate.upsert({
-    where: { id: "bt-cad-placeholder" },
-    update: {},
     create: {
-      id: "bt-cad-placeholder",
-      name: "CAD - [Bank Name]",
+      id: "bt-wise-usd",
+      name: "CAD – Kezpo LLC (Wise Canada)",
       currency: "CAD",
-      account_number: "[To be configured]",
-      institution_no: "[To be configured]",
-      transit_no: "[To be configured]",
-      swift_bic: "[To be configured]",
-      bank_name: "[To be configured]",
-      bank_address: "[To be configured]",
+      account_number: "200110250929",
+      institution_no: "621",
+      transit_no: "16001",
+      swift_bic: "TRWICAW1XXX",
+      bank_name: "Wise Payments Canada Inc.",
+      bank_address: "99 Bank Street, Suite 1420, Ottawa, ON, K1P 1H4, Canada",
       is_default: false,
     },
   });
 
-  // 2. Client
+  // USD – Wise US (Kezpo LLC)
+  await prisma.bankTemplate.upsert({
+    where: { id: "bt-usd-wise-us" },
+    update: {
+      name: "USD – Kezpo LLC (Wise US)",
+      currency: "USD",
+      account_number: "211224797456",
+      institution_no: "101019628",
+      transit_no: null,
+      swift_bic: "TRWIUS35XXX",
+      bank_name: "Wise US Inc",
+      bank_address: "108 W 13th St, Wilmington, DE 19801, United States",
+      is_default: true,
+    },
+    create: {
+      id: "bt-usd-wise-us",
+      name: "USD – Kezpo LLC (Wise US)",
+      currency: "USD",
+      account_number: "211224797456",
+      institution_no: "101019628",
+      transit_no: null,
+      swift_bic: "TRWIUS35XXX",
+      bank_name: "Wise US Inc",
+      bank_address: "108 W 13th St, Wilmington, DE 19801, United States",
+      is_default: true,
+    },
+  });
+
+  // EUR – Wise Belgium (Kezpo LLC)
+  await prisma.bankTemplate.upsert({
+    where: { id: "bt-eur-wise-be" },
+    update: {
+      name: "EUR – Kezpo LLC (Wise Belgium)",
+      currency: "EUR",
+      account_number: "BE12 9056 7510 9192",
+      institution_no: null,
+      transit_no: null,
+      swift_bic: "TRWIBEB1XXX",
+      bank_name: "Wise",
+      bank_address: "Rue du Trône 100, 3rd floor, Brussels, 1050, Belgium",
+      is_default: false,
+    },
+    create: {
+      id: "bt-eur-wise-be",
+      name: "EUR – Kezpo LLC (Wise Belgium)",
+      currency: "EUR",
+      account_number: "BE12 9056 7510 9192",
+      institution_no: null,
+      transit_no: null,
+      swift_bic: "TRWIBEB1XXX",
+      bank_name: "Wise",
+      bank_address: "Rue du Trône 100, 3rd floor, Brussels, 1050, Belgium",
+      is_default: false,
+    },
+  });
+
+  // Remove placeholder CAD template if still exists
+  await prisma.bankTemplate.deleteMany({ where: { id: "bt-cad-placeholder" } });
+
+  // 3. Client
   const client = await prisma.client.upsert({
     where: { id: "client-plastinove" },
     update: {},
@@ -68,17 +154,18 @@ async function main() {
     },
   });
 
-  // 3. Invoice 1265
+  // 4. Invoice 1265
   await prisma.invoice.upsert({
     where: { invoice_number: "1265" },
     update: {},
     create: {
       invoice_number: "1265",
       client_id: client.id,
+      company_id: "company-kezpo-llc",
       date: new Date("2026-01-30"),
       due_date: new Date("2026-01-30"),
       status: "SENT",
-      bank_template_id: wiseTemplate.id,
+      bank_template_id: "bt-usd-wise-us",
       line_items: [
         {
           item_number: 1,
