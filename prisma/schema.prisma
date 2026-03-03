@@ -82,6 +82,7 @@ model Quote {
   date            DateTime
   valid_until     DateTime
   status          QuoteStatus @default(DRAFT)
+  currency        String      @default("USD")
   line_items      Json
   subtotal        Decimal     @db.Decimal(12, 2)
   tax             Decimal?    @db.Decimal(12, 2)

@@ -10,6 +10,14 @@ import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import LineItemsEditor, { LineItem } from "@/components/LineItemsEditor";
 import { formatDateForInput } from "@/lib/utils";
 
+const CURRENCY_OPTIONS = [
+  { value: "USD", label: "USD — US Dollar" },
+  { value: "CAD", label: "CAD — Canadian Dollar" },
+  { value: "EUR", label: "EUR — Euro" },
+];
+
+const CURRENCY_SYMBOL: Record<string, string> = { USD: "$", CAD: "CA$", EUR: "€" };
+
 const TERMS_OPTIONS = [
   { value: "Payment 100% before Shipping", label: "100% before Shipping" },
   { value: "Due in receipt", label: "Due in receipt" },
@@ -43,6 +51,7 @@ export default function QuoteForm({
     date: initialData ? formatDateForInput(new Date(initialData.date)) : today,
     valid_until: initialData ? formatDateForInput(new Date(initialData.valid_until)) : thirtyDays,
     status: initialData?.status ?? "DRAFT",
+    currency: initialData?.currency ?? "USD",
     payment_terms: initialData?.payment_terms ?? "",
     notes: initialData?.notes ?? "",
     tax: initialData?.tax ? String(initialData.tax) : "",
@@ -67,9 +76,11 @@ export default function QuoteForm({
     fetch("/api/clients").then((r) => r.json()).then(setClients);
   }, []);
 
-  const subtotal = lineItems.reduce((s, i) => s + i.amount, 0);
-  const tax = parseFloat(form.tax) || 0;
-  const total = subtotal + tax;
+  const round2 = (n: number) => Math.round(n * 100) / 100;
+  const subtotal = round2(lineItems.reduce((s, i) => s + i.amount, 0));
+  const tax = round2(parseFloat(form.tax) || 0);
+  const total = round2(subtotal + tax);
+  const sym = CURRENCY_SYMBOL[form.currency] ?? "$";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -82,12 +93,15 @@ export default function QuoteForm({
         mode === "create" ? "/api/quotes" : `/api/quotes/${initialData.id}`,
         { method: mode === "create" ? "POST" : "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }
       );
-      if (!res.ok) throw new Error();
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error ?? `Server error ${res.status}`);
+      }
       const q = await res.json();
       toast.success(mode === "create" ? "Quote created!" : "Quote updated!");
       router.push(`/quotes/${q.id}`);
-    } catch {
-      toast.error("Failed to save quote");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to save quote");
     } finally {
       setLoading(false);
     }
@@ -127,7 +141,7 @@ export default function QuoteForm({
               <div className="mt-4 border-t pt-4 space-y-2 text-sm">
                 <div className="flex justify-between text-gray-600">
                   <span>Subtotal</span>
-                  <span className="font-medium">${subtotal.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
+                  <span className="font-medium">{sym}{subtotal.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
                 </div>
                 <div className="flex justify-between items-center text-gray-600">
                   <span>Tax</span>
@@ -143,7 +157,7 @@ export default function QuoteForm({
                 </div>
                 <div className="flex justify-between font-bold text-base border-t pt-2">
                   <span>Total</span>
-                  <span className="text-[#2AABE2]">${total.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
+                  <span className="text-[#2AABE2]">{sym}{total.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
                 </div>
               </div>
             </CardContent>
@@ -170,6 +184,12 @@ export default function QuoteForm({
               <Input label="Quote #" value={form.quote_number} onChange={(e) => setForm((f) => ({ ...f, quote_number: e.target.value }))} required />
               <Input label="Date" type="date" value={form.date} onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))} required />
               <Input label="Valid Until" type="date" value={form.valid_until} onChange={(e) => setForm((f) => ({ ...f, valid_until: e.target.value }))} required />
+              <Select
+                label="Currency"
+                value={form.currency}
+                onChange={(e) => setForm((f) => ({ ...f, currency: e.target.value }))}
+                options={CURRENCY_OPTIONS}
+              />
               <Select
                 label="Status"
                 value={form.status}

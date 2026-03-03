@@ -28,6 +28,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       date: new Date(body.date),
       valid_until: new Date(body.valid_until),
       status: body.status,
+      currency: body.currency ?? "USD",
       line_items: body.line_items,
       subtotal: body.subtotal,
       tax: body.tax ?? null,

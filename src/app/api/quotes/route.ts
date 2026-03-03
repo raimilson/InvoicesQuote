@@ -52,6 +52,7 @@ export async function POST(req: NextRequest) {
       date: new Date(body.date),
       valid_until: new Date(body.valid_until),
       status: body.status ?? "DRAFT",
+      currency: body.currency ?? "USD",
       line_items: body.line_items,
       subtotal: body.subtotal,
       tax: body.tax ?? null,
