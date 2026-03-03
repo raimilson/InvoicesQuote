@@ -27,31 +27,27 @@
     {
       "entityId": "dashboard",
       "name": "Dashboard",
-      "contentUrl": "https://YOUR_VERCEL_DOMAIN/",
-      "websiteUrl": "https://YOUR_VERCEL_DOMAIN/",
+      "contentUrl": "https://invoices-quote-jm1zuvzge-raimilsons-projects.vercel.app/",
+      "websiteUrl": "https://invoices-quote-jm1zuvzge-raimilsons-projects.vercel.app/",
       "scopes": ["personal"]
     },
     {
       "entityId": "invoices",
       "name": "Invoices",
-      "contentUrl": "https://YOUR_VERCEL_DOMAIN/invoices",
-      "websiteUrl": "https://YOUR_VERCEL_DOMAIN/invoices",
+      "contentUrl": "https://invoices-quote-jm1zuvzge-raimilsons-projects.vercel.app/invoices",
+      "websiteUrl": "https://invoices-quote-jm1zuvzge-raimilsons-projects.vercel.app/invoices",
       "scopes": ["personal"]
     },
     {
       "entityId": "quotes",
       "name": "Quotes",
-      "contentUrl": "https://YOUR_VERCEL_DOMAIN/quotes",
-      "websiteUrl": "https://YOUR_VERCEL_DOMAIN/quotes",
+      "contentUrl": "https://invoices-quote-jm1zuvzge-raimilsons-projects.vercel.app/quotes",
+      "websiteUrl": "https://invoices-quote-jm1zuvzge-raimilsons-projects.vercel.app/quotes",
       "scopes": ["personal"]
     }
   ],
   "permissions": ["identity", "messageTeamMembers"],
   "validDomains": [
-    "YOUR_VERCEL_DOMAIN"
-  ],
-  "webApplicationInfo": {
-    "id": "YOUR_AZURE_AD_CLIENT_ID",
-    "resource": "https://YOUR_VERCEL_DOMAIN"
-  }
+    "invoices-quote-jm1zuvzge-raimilsons-projects.vercel.app"
+  ]
 }
