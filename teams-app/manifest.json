@@ -1,0 +1,57 @@
+{
+  "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.16/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.16",
+  "version": "1.0.0",
+  "id": "kezpo-invoice-app",
+  "packageName": "ca.kezpo.invoice",
+  "developer": {
+    "name": "Kezpo Solutions Inc",
+    "websiteUrl": "https://www.kezpo.ca",
+    "privacyUrl": "https://www.kezpo.ca/privacy",
+    "termsOfUseUrl": "https://www.kezpo.ca/terms"
+  },
+  "name": {
+    "short": "Kezpo Invoice",
+    "full": "Kezpo Invoice & Quote Manager"
+  },
+  "description": {
+    "short": "Manage invoices and quotes",
+    "full": "Create, track, and export invoices and quotes for Kezpo Solutions Inc. Supports partial payment tracking, PDF generation, and quote-to-invoice conversion."
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "accentColor": "#2AABE2",
+  "staticTabs": [
+    {
+      "entityId": "dashboard",
+      "name": "Dashboard",
+      "contentUrl": "https://YOUR_VERCEL_DOMAIN/",
+      "websiteUrl": "https://YOUR_VERCEL_DOMAIN/",
+      "scopes": ["personal"]
+    },
+    {
+      "entityId": "invoices",
+      "name": "Invoices",
+      "contentUrl": "https://YOUR_VERCEL_DOMAIN/invoices",
+      "websiteUrl": "https://YOUR_VERCEL_DOMAIN/invoices",
+      "scopes": ["personal"]
+    },
+    {
+      "entityId": "quotes",
+      "name": "Quotes",
+      "contentUrl": "https://YOUR_VERCEL_DOMAIN/quotes",
+      "websiteUrl": "https://YOUR_VERCEL_DOMAIN/quotes",
+      "scopes": ["personal"]
+    }
+  ],
+  "permissions": ["identity", "messageTeamMembers"],
+  "validDomains": [
+    "YOUR_VERCEL_DOMAIN"
+  ],
+  "webApplicationInfo": {
+    "id": "YOUR_AZURE_AD_CLIENT_ID",
+    "resource": "https://YOUR_VERCEL_DOMAIN"
+  }
+}

@@ -1,0 +1,16 @@
+@import "tailwindcss";
+
+@theme {
+  --color-kezpo-blue: #2aabe2;
+  --color-kezpo-blue-dark: #1a8fc5;
+  --color-kezpo-blue-light: #e8f6fd;
+}
+
+:root {
+  --kezpo-blue: #2aabe2;
+  --kezpo-blue-dark: #1a8fc5;
+}
+
+body {
+  @apply bg-gray-50 text-gray-900;
+}
