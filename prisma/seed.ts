@@ -1,9 +1,24 @@
 import { PrismaClient } from "@prisma/client";
+import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
 async function main() {
   console.log("Seeding database...");
+
+  // 0. Admin user
+  const adminPassword = await bcrypt.hash("changeme", 10);
+  await prisma.user.upsert({
+    where: { email: "raimilson@kezpo.ca" },
+    update: {},
+    create: {
+      id: "user-admin",
+      name: "Raimilson",
+      email: "raimilson@kezpo.ca",
+      password: adminPassword,
+      role: "ADMIN",
+    },
+  });
 
   // 1. Bank Templates
   const wiseTemplate = await prisma.bankTemplate.upsert({

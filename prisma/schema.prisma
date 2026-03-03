@@ -7,6 +7,11 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum UserRole {
+  ADMIN
+  MEMBER
+}
+
 enum Currency {
   USD
   CAD
@@ -28,6 +33,16 @@ enum QuoteStatus {
   ACCEPTED
   REJECTED
   CONVERTED
+}
+
+model User {
+  id         String   @id @default(uuid())
+  name       String
+  email      String   @unique
+  password   String
+  role       UserRole @default(MEMBER)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 }
 
 model Client {

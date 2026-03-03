@@ -21,6 +21,7 @@ const navItems = [
   { href: "/quotes", icon: ScrollText, label: "Quotes" },
   { href: "/clients", icon: Users, label: "Clients" },
   { href: "/settings", icon: Settings, label: "Settings" },
+  { href: "/settings/users", icon: Users, label: "Users" },
 ];
 
 function NavLink({ href, icon: Icon, label }: (typeof navItems)[0]) {
