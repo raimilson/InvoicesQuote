@@ -16,22 +16,22 @@ export default function InvoiceDetailPage() {
   const router = useRouter();
   const [invoice, setInvoice] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [linkedDocs, setLinkedDocs] = useState<any>(null);
 
   const load = () =>
     fetch(`/api/invoices/${id}`).then((r) => r.json()).then((d) => { setInvoice(d); setLoading(false); });
 
   useEffect(() => { load(); }, [id]);
 
+  useEffect(() => {
+    fetch(`/api/invoices/${id}/linked`).then((r) => r.json()).then(setLinkedDocs).catch(() => {});
+  }, [id]);
+
   if (loading) return <div className="animate-pulse h-96 bg-white rounded-xl border" />;
   if (!invoice || invoice.error) return <p className="text-gray-500">Invoice not found.</p>;
 
   const totalPaid = invoice.payments?.reduce((s: number, p: any) => s + parseFloat(p.amount), 0) ?? 0;
   const lineItems = invoice.line_items as any[];
-  const [linkedDocs, setLinkedDocs] = useState<any>(null);
-
-  useEffect(() => {
-    fetch(`/api/invoices/${id}/linked`).then((r) => r.json()).then(setLinkedDocs).catch(() => {});
-  }, [id]);
 
   return (
     <div className="space-y-6 max-w-4xl">
