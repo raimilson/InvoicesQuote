@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import toast from "react-hot-toast";
-import { Download, Edit, ArrowLeft, ArrowRight } from "lucide-react";
+import { Download, Edit, ArrowLeft, ArrowRight, ClipboardCheck } from "lucide-react";
 import Button from "@/components/ui/Button";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import StatusBadge from "@/components/StatusBadge";
@@ -74,6 +74,9 @@ export default function QuoteDetailPage() {
               <ArrowRight className="h-4 w-4" />Convert to Invoice
             </Button>
           )}
+          <Link href={`/orders/new?from_quote=${id}`}>
+            <Button variant="secondary" size="sm"><ClipboardCheck className="h-4 w-4" />New Order Confirmation</Button>
+          </Link>
           <a href={`/api/quotes/${id}/pdf`} target="_blank" rel="noopener">
             <Button variant="secondary" size="sm"><Download className="h-4 w-4" />Download PDF</Button>
           </a>

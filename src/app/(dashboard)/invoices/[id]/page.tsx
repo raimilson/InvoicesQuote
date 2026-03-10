@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { Download, Edit, ArrowLeft } from "lucide-react";
+import { Download, Edit, ArrowLeft, ClipboardCheck, Truck, Package, FileSignature, Plus } from "lucide-react";
 import toast from "react-hot-toast";
 import Button from "@/components/ui/Button";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
@@ -27,6 +27,11 @@ export default function InvoiceDetailPage() {
 
   const totalPaid = invoice.payments?.reduce((s: number, p: any) => s + parseFloat(p.amount), 0) ?? 0;
   const lineItems = invoice.line_items as any[];
+  const [linkedDocs, setLinkedDocs] = useState<any>(null);
+
+  useEffect(() => {
+    fetch(`/api/invoices/${id}/linked`).then((r) => r.json()).then(setLinkedDocs).catch(() => {});
+  }, [id]);
 
   return (
     <div className="space-y-6 max-w-4xl">
@@ -206,6 +211,80 @@ export default function InvoiceDetailPage() {
           )}
         </div>
       </div>
+
+      {/* Linked Logistics Documents */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <h2 className="font-semibold">Linked Documents</h2>
+            <div className="flex gap-2 flex-wrap">
+              <Link href={`/orders/new?from_invoice=${id}`}>
+                <Button size="sm" variant="secondary"><Plus className="h-3.5 w-3.5" /><ClipboardCheck className="h-3.5 w-3.5" />Order</Button>
+              </Link>
+              <Link href={`/deliveries/new?from_invoice=${id}`}>
+                <Button size="sm" variant="secondary"><Plus className="h-3.5 w-3.5" /><Truck className="h-3.5 w-3.5" />Delivery</Button>
+              </Link>
+              <Link href={`/packing-lists/new?from_invoice=${id}`}>
+                <Button size="sm" variant="secondary"><Plus className="h-3.5 w-3.5" /><Package className="h-3.5 w-3.5" />Packing List</Button>
+              </Link>
+              <Link href={`/contracts/new?from_invoice=${id}`}>
+                <Button size="sm" variant="secondary"><Plus className="h-3.5 w-3.5" /><FileSignature className="h-3.5 w-3.5" />Contract</Button>
+              </Link>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {!linkedDocs ? (
+            <p className="text-sm text-gray-400">Loading linked documents...</p>
+          ) : (
+            <div className="space-y-3">
+              {linkedDocs.order_confirmations?.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Order Confirmations</p>
+                  <div className="flex flex-wrap gap-2">
+                    {linkedDocs.order_confirmations.map((o: any) => (
+                      <Link key={o.id} href={`/orders/${o.id}`} className="text-sm text-[#2AABE2] hover:underline">{o.order_number}</Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {linkedDocs.delivery_notices?.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Delivery Notices</p>
+                  <div className="flex flex-wrap gap-2">
+                    {linkedDocs.delivery_notices.map((d: any) => (
+                      <Link key={d.id} href={`/deliveries/${d.id}`} className="text-sm text-[#2AABE2] hover:underline">{d.delivery_number}</Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {linkedDocs.packing_lists?.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Packing Lists</p>
+                  <div className="flex flex-wrap gap-2">
+                    {linkedDocs.packing_lists.map((p: any) => (
+                      <Link key={p.id} href={`/packing-lists/${p.id}`} className="text-sm text-[#2AABE2] hover:underline">{p.packing_number}</Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {linkedDocs.sales_contracts?.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Sales Contracts</p>
+                  <div className="flex flex-wrap gap-2">
+                    {linkedDocs.sales_contracts.map((c: any) => (
+                      <Link key={c.id} href={`/contracts/${c.id}`} className="text-sm text-[#2AABE2] hover:underline">{c.contract_number}</Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {(!linkedDocs.order_confirmations?.length && !linkedDocs.delivery_notices?.length && !linkedDocs.packing_lists?.length && !linkedDocs.sales_contracts?.length) && (
+                <p className="text-sm text-gray-400">No linked logistics documents yet. Use the buttons above to create one.</p>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

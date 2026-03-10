@@ -12,6 +12,10 @@ import {
   LogOut,
   Menu,
   X,
+  ClipboardCheck,
+  Truck,
+  Package,
+  FileSignature,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -22,6 +26,13 @@ const navItems = [
   { href: "/clients", icon: Users, label: "Clients" },
   { href: "/settings", icon: Settings, label: "Settings" },
   { href: "/settings/users", icon: Users, label: "Users" },
+];
+
+const logisticsItems = [
+  { href: "/orders", icon: ClipboardCheck, label: "Orders" },
+  { href: "/deliveries", icon: Truck, label: "Deliveries" },
+  { href: "/packing-lists", icon: Package, label: "Packing Lists" },
+  { href: "/contracts", icon: FileSignature, label: "Contracts" },
 ];
 
 function NavLink({ href, icon: Icon, label }: (typeof navItems)[0]) {
@@ -64,8 +75,20 @@ export default function Sidebar() {
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 px-3 py-4 space-y-1">
-        {navItems.map((item) => (
+      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+        {navItems.slice(0, 3).map((item) => (
+          <NavLink key={item.href} {...item} />
+        ))}
+        <div className="pt-3 pb-1">
+          <p className="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Logistics</p>
+        </div>
+        {logisticsItems.map((item) => (
+          <NavLink key={item.href} {...item} />
+        ))}
+        <div className="pt-3 pb-1">
+          <p className="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Admin</p>
+        </div>
+        {navItems.slice(3).map((item) => (
           <NavLink key={item.href} {...item} />
         ))}
       </nav>

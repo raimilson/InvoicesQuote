@@ -35,14 +35,12 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json();
 
-  // Auto-generate quote number
+  // Auto-generate quote number (numeric max to avoid lexicographic sort issues)
   if (!body.quote_number) {
-    const last = await prisma.quote.findFirst({
-      orderBy: { quote_number: "desc" },
-      select: { quote_number: true },
-    });
-    const lastNum = last ? parseInt(last.quote_number.replace("Q-", ""), 10) : 1000;
-    body.quote_number = isNaN(lastNum) ? "Q-1001" : `Q-${lastNum + 1}`;
+    const all = await prisma.quote.findMany({ select: { quote_number: true } });
+    const nums = all.map(q => parseInt(q.quote_number.replace(/^Q-/i, ""), 10)).filter(n => !isNaN(n));
+    const maxNum = nums.length > 0 ? Math.max(...nums) : 1000;
+    body.quote_number = `Q-${maxNum + 1}`;
   }
 
   const quote = await prisma.quote.create({
