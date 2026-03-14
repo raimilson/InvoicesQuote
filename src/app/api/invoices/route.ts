@@ -78,6 +78,7 @@ export async function POST(req: NextRequest) {
       total: body.total,
       payment_terms: body.payment_terms ?? null,
       notes: body.notes ?? null,
+      order_confirmation_id: body.order_confirmation_id ?? null,
     },
     include: { client: true, bank_template: true },
   });

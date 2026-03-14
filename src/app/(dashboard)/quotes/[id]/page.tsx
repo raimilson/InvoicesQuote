@@ -16,6 +16,7 @@ export default function QuoteDetailPage() {
   const [quote, setQuote] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [converting, setConverting] = useState(false);
+  const [convertingToOrder, setConvertingToOrder] = useState(false);
 
   useEffect(() => {
     fetch(`/api/quotes/${id}`).then((r) => r.json()).then((d) => { setQuote(d); setLoading(false); });
@@ -39,6 +40,23 @@ export default function QuoteDetailPage() {
       toast.error("Conversion failed");
     } finally {
       setConverting(false);
+    }
+  };
+
+  const convertToOrder = async () => {
+    setConvertingToOrder(true);
+    try {
+      const res = await fetch(`/api/quotes/${id}/convert-order`, {
+        method: "POST",
+      });
+      const order = await res.json();
+      if (!res.ok) { toast.error(order.error ?? "Conversion failed"); return; }
+      toast.success("Converted to order confirmation!");
+      router.push(`/orders/${order.id}`);
+    } catch {
+      toast.error("Conversion to order failed");
+    } finally {
+      setConvertingToOrder(false);
     }
   };
 
@@ -74,9 +92,11 @@ export default function QuoteDetailPage() {
               <ArrowRight className="h-4 w-4" />Convert to Invoice
             </Button>
           )}
-          <Link href={`/orders/new?from_quote=${id}`}>
-            <Button variant="secondary" size="sm"><ClipboardCheck className="h-4 w-4" />New Order Confirmation</Button>
-          </Link>
+          {quote.status === "ACCEPTED" && (
+            <Button variant="secondary" size="sm" onClick={convertToOrder} loading={convertingToOrder}>
+              <ClipboardCheck className="h-4 w-4" />Convert to Order
+            </Button>
+          )}
           <a href={`/api/quotes/${id}/pdf`} target="_blank" rel="noopener">
             <Button variant="secondary" size="sm"><Download className="h-4 w-4" />Download PDF</Button>
           </a>

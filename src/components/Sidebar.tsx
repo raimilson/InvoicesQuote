@@ -16,28 +16,41 @@ import {
   Truck,
   Package,
   FileSignature,
+  ArrowLeft,
+  UserCog,
 } from "lucide-react";
 import { useState } from "react";
 
-const navItems = [
-  { href: "/", icon: LayoutDashboard, label: "Dashboard" },
-  { href: "/invoices", icon: FileText, label: "Invoices" },
+const solutionsSalesItems = [
   { href: "/quotes", icon: ScrollText, label: "Quotes" },
-  { href: "/clients", icon: Users, label: "Clients" },
-  { href: "/settings", icon: Settings, label: "Settings" },
-  { href: "/settings/users", icon: Users, label: "Users" },
+  { href: "/orders", icon: ClipboardCheck, label: "Orders" },
+  { href: "/invoices", icon: FileText, label: "Invoices" },
 ];
 
-const logisticsItems = [
-  { href: "/orders", icon: ClipboardCheck, label: "Orders" },
+const solutionsFulfillmentItems = [
   { href: "/deliveries", icon: Truck, label: "Deliveries" },
   { href: "/packing-lists", icon: Package, label: "Packing Lists" },
-  { href: "/contracts", icon: FileSignature, label: "Contracts" },
 ];
 
-function NavLink({ href, icon: Icon, label }: (typeof navItems)[0]) {
+const solutionsAdminItems = [
+  { href: "/contracts", icon: FileSignature, label: "Contracts" },
+  { href: "/clients", icon: Users, label: "Clients" },
+  { href: "/settings", icon: Settings, label: "Settings" },
+  { href: "/settings/users", icon: UserCog, label: "Users" },
+];
+
+const locacoesNavItems = [
+  { href: "/locacoes", icon: LayoutDashboard, label: "Painel" },
+  { href: "/locacoes/orcamentos", icon: ScrollText, label: "Orçamentos" },
+  { href: "/locacoes/pedidos", icon: ClipboardCheck, label: "Pedidos" },
+  { href: "/locacoes/produtos", icon: Package, label: "Produtos" },
+  { href: "/locacoes/clientes", icon: Users, label: "Clientes" },
+];
+
+function NavLink({ href, icon: Icon, label }: { href: string; icon: any; label: string }) {
   const pathname = usePathname();
-  const isActive = pathname === href || (href !== "/" && pathname.startsWith(href));
+  const isActive = pathname === href || (href !== "/" && href !== "/locacoes" && pathname.startsWith(href))
+    || (href === "/locacoes" && pathname === "/locacoes");
 
   return (
     <Link
@@ -56,6 +69,8 @@ function NavLink({ href, icon: Icon, label }: (typeof navItems)[0]) {
 
 export default function Sidebar() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const pathname = usePathname();
+  const isLocacoes = pathname.startsWith("/locacoes");
 
   const sidebarContent = (
     <div className="flex flex-col h-full">
@@ -76,21 +91,43 @@ export default function Sidebar() {
 
       {/* Nav */}
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-        {navItems.slice(0, 3).map((item) => (
-          <NavLink key={item.href} {...item} />
-        ))}
-        <div className="pt-3 pb-1">
-          <p className="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Logistics</p>
-        </div>
-        {logisticsItems.map((item) => (
-          <NavLink key={item.href} {...item} />
-        ))}
-        <div className="pt-3 pb-1">
-          <p className="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Admin</p>
-        </div>
-        {navItems.slice(3).map((item) => (
-          <NavLink key={item.href} {...item} />
-        ))}
+        {isLocacoes ? (
+          <>
+            {locacoesNavItems.map((item) => (
+              <NavLink key={item.href} {...item} />
+            ))}
+            <div className="pt-4 mt-4 border-t border-gray-100">
+              <Link
+                href="/"
+                className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:bg-gray-50 hover:text-gray-600 transition-colors"
+              >
+                <ArrowLeft className="h-5 w-5 flex-shrink-0" />
+                <span>Kezpo Solutions</span>
+              </Link>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="pt-1 pb-1">
+              <p className="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Sales</p>
+            </div>
+            {solutionsSalesItems.map((item) => (
+              <NavLink key={item.href} {...item} />
+            ))}
+            <div className="pt-3 pb-1">
+              <p className="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Fulfillment</p>
+            </div>
+            {solutionsFulfillmentItems.map((item) => (
+              <NavLink key={item.href} {...item} />
+            ))}
+            <div className="pt-3 pb-1">
+              <p className="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Admin</p>
+            </div>
+            {solutionsAdminItems.map((item) => (
+              <NavLink key={item.href} {...item} />
+            ))}
+          </>
+        )}
       </nav>
 
       {/* Sign out */}

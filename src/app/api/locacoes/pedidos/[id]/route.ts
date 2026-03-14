@@ -7,15 +7,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { id } = await params;
-  const order = await prisma.orderConfirmation.findUnique({
+  const order = await prisma.rentalOrder.findUnique({
     where: { id },
-    include: {
-      client: true,
-      company: true,
-      invoice: true,
-      invoices: { where: { deleted_at: null }, select: { id: true, invoice_number: true, total: true, status: true, date: true }, orderBy: { created_at: "asc" } },
-      quote: { select: { id: true, quote_number: true } },
-    },
+    include: { client: true, from_quote: true },
   });
   if (!order || order.deleted_at) return NextResponse.json({ error: "Not found" }, { status: 404 });
   return NextResponse.json(order);
@@ -27,22 +21,33 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
   const { id } = await params;
   const body = await req.json();
-  const order = await prisma.orderConfirmation.update({
+
+  const order = await prisma.rentalOrder.update({
     where: { id },
     data: {
       client_id: body.client_id,
-      company_id: body.company_id ?? null,
-      invoice_id: body.invoice_id ?? null,
-      date: new Date(body.date),
-      delivery_date: body.delivery_date ? new Date(body.delivery_date) : null,
-      payment_terms: body.payment_terms ?? null,
-      currency: body.currency ?? "USD",
-      purchase_order: body.purchase_order ?? null,
-      line_items: body.line_items,
+      data_evento: new Date(body.data_evento),
+      endereco_entrega: body.endereco_entrega,
+      horario_inicio: body.horario_inicio,
+      horario_fim: body.horario_fim,
+      responsavel_nome: body.responsavel_nome ?? null,
+      responsavel_telefone: body.responsavel_telefone ?? null,
+      uso_monitor: body.uso_monitor ?? false,
+      qtd_monitores: body.qtd_monitores ?? 0,
+      items: body.items,
+      subtotal: body.subtotal,
+      desconto: body.desconto ?? null,
+      total: body.total,
+      horas_contratadas: body.horas_contratadas ?? 4,
+      pagamento_sinal: body.pagamento_sinal ?? null,
+      pagamento_metodo: body.pagamento_metodo ?? null,
+      status: body.status,
       notes: body.notes ?? null,
+      contract_generated: body.contract_generated ?? false,
     },
-    include: { client: true, company: true },
+    include: { client: true, from_quote: true },
   });
+
   return NextResponse.json(order);
 }
 
@@ -51,6 +56,6 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { id } = await params;
-  await prisma.orderConfirmation.update({ where: { id }, data: { deleted_at: new Date() } });
+  await prisma.rentalOrder.update({ where: { id }, data: { deleted_at: new Date() } });
   return NextResponse.json({ success: true });
 }

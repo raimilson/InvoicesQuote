@@ -26,6 +26,7 @@ interface PackingLineItem {
 
 interface Client { id: string; name: string; company?: string | null }
 interface Company { id: string; name: string; is_default?: boolean }
+interface Delivery { id: string; delivery_number: string; client_id: string; client?: Client | null }
 
 export default function PackingListForm({
   mode,
@@ -40,8 +41,10 @@ export default function PackingListForm({
   const [clients, setClients] = useState<Client[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [invoices, setInvoices] = useState<any[]>([]);
+  const [deliveries, setDeliveries] = useState<Delivery[]>([]);
   const [loading, setLoading] = useState(false);
   const [invoiceSearch, setInvoiceSearch] = useState("");
+  const [deliverySearch, setDeliverySearch] = useState("");
 
   const today = formatDateForInput(new Date());
 
@@ -72,10 +75,12 @@ export default function PackingListForm({
       fetch("/api/clients").then((r) => r.json()),
       fetch("/api/companies").then((r) => r.json()),
       fetch("/api/invoices").then((r) => r.json()),
-    ]).then(([c, co, inv]) => {
+      fetch("/api/deliveries").then((r) => r.json()),
+    ]).then(([c, co, inv, del]) => {
       setClients(c);
       setCompanies(co);
       setInvoices(Array.isArray(inv) ? inv : []);
+      setDeliveries(Array.isArray(del) ? del : []);
       if (!initialData?.company_id && co.length > 0) {
         const def = co.find((c: Company) => c.is_default) ?? co[0];
         setForm((f) => ({ ...f, company_id: def.id }));
@@ -370,7 +375,31 @@ export default function PackingListForm({
                   ))}
                 </select>
               </div>
-              <Input label="Linked Delivery ID (optional)" value={form.delivery_id} onChange={(e) => setForm((f) => ({ ...f, delivery_id: e.target.value }))} placeholder="Delivery ID..." />
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Linked Delivery (optional)</label>
+                <input
+                  type="text"
+                  className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#2AABE2] mb-1"
+                  placeholder="Search by delivery #..."
+                  value={deliverySearch}
+                  onChange={(e) => setDeliverySearch(e.target.value)}
+                />
+                <select
+                  className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#2AABE2] bg-white"
+                  value={form.delivery_id}
+                  onChange={(e) => setForm((f) => ({ ...f, delivery_id: e.target.value }))}
+                >
+                  <option value="">Select delivery...</option>
+                  {deliveries
+                    .filter((d) => !form.client_id || d.client_id === form.client_id)
+                    .filter((d) => !deliverySearch || d.delivery_number?.toLowerCase().includes(deliverySearch.toLowerCase()))
+                    .map((d) => (
+                      <option key={d.id} value={d.id}>
+                        #{d.delivery_number} — {d.client?.company ?? d.client?.name ?? ""}
+                      </option>
+                    ))}
+                </select>
+              </div>
             </CardContent>
           </Card>
         </div>

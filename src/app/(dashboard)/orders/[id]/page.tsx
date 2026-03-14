@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { Download, Edit, ArrowLeft, FileText } from "lucide-react";
+import { Download, Edit, ArrowLeft, FileText, Receipt } from "lucide-react";
 import Button from "@/components/ui/Button";
+import StatusBadge from "@/components/StatusBadge";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import { formatDate } from "@/lib/utils";
 
@@ -27,6 +28,11 @@ export default function OrderDetailPage() {
   const sym = CURRENCY_SYM[order.currency] ?? "$";
   const total = lineItems.reduce((s: number, i: any) => s + (i.amount ?? 0), 0);
 
+  const invoices = (order.invoices ?? []) as any[];
+  const totalInvoiced = invoices.reduce((s: number, inv: any) => s + (inv.total ?? 0), 0);
+  const remaining = total - totalInvoiced;
+  const fullyInvoiced = remaining <= 0 && invoices.length > 0;
+
   return (
     <div className="space-y-6 max-w-4xl">
       <div className="flex items-center justify-between flex-wrap gap-3">
@@ -40,9 +46,13 @@ export default function OrderDetailPage() {
           </div>
         </div>
         <div className="flex gap-2 flex-wrap">
-          <Link href={`/invoices/new?from_order=${id}`}>
-            <Button variant="secondary" size="sm"><FileText className="h-4 w-4" />Create Invoice</Button>
-          </Link>
+          {fullyInvoiced ? (
+            <Button variant="secondary" size="sm" disabled><FileText className="h-4 w-4" />Fully Invoiced</Button>
+          ) : (
+            <Link href={`/invoices/new?from_order=${id}`}>
+              <Button variant="secondary" size="sm"><FileText className="h-4 w-4" />Create Invoice ({sym}{remaining.toLocaleString("en-US", { minimumFractionDigits: 2 })} remaining)</Button>
+            </Link>
+          )}
           <a href={`/api/orders/${id}/pdf`} target="_blank" rel="noopener">
             <Button variant="secondary" size="sm"><Download className="h-4 w-4" />Download PDF</Button>
           </a>
@@ -106,6 +116,53 @@ export default function OrderDetailPage() {
           </div>
         </CardContent>
       </Card>
+
+      {invoices.length > 0 && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Receipt className="h-5 w-5 text-[#2AABE2]" />
+              <h2 className="font-semibold">Linked Invoices</h2>
+            </div>
+          </CardHeader>
+          <CardContent className="p-0">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-3 text-left font-medium text-gray-500">Invoice #</th>
+                  <th className="px-4 py-3 text-right font-medium text-gray-500">Total</th>
+                  <th className="px-4 py-3 text-center font-medium text-gray-500">Status</th>
+                  <th className="px-4 py-3 text-right font-medium text-gray-500">Date</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {invoices.map((inv: any) => (
+                  <tr key={inv.id} className="hover:bg-gray-50">
+                    <td className="px-4 py-3">
+                      <Link href={`/invoices/${inv.id}`} className="text-[#2AABE2] hover:underline font-medium">
+                        {inv.invoice_number}
+                      </Link>
+                    </td>
+                    <td className="px-4 py-3 text-right">{sym}{(inv.total ?? 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}</td>
+                    <td className="px-4 py-3 text-center"><StatusBadge status={inv.status} /></td>
+                    <td className="px-4 py-3 text-right text-gray-500">{formatDate(inv.date)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <div className="px-4 py-4 border-t space-y-1">
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-500">Total Invoiced:</span>
+                <span className="font-semibold">{sym}{totalInvoiced.toLocaleString("en-US", { minimumFractionDigits: 2 })} / {sym}{total.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-500">Remaining Balance:</span>
+                <span className={`font-semibold ${remaining <= 0 ? "text-green-600" : "text-orange-600"}`}>{sym}{remaining.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {order.notes && (
         <Card>

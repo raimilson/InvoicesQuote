@@ -54,6 +54,7 @@ export default function InvoiceForm({
     payment_terms: initialData?.payment_terms ?? "",
     notes: initialData?.notes ?? "",
     tax: initialData?.tax ? String(initialData.tax) : "",
+    order_confirmation_id: initialData?.order_confirmation_id ?? "",
   });
 
   // Normalise legacy line items (product_service → description)
@@ -117,7 +118,7 @@ export default function InvoiceForm({
     if (!form.bank_template_id) { toast.error("Select a bank template"); return; }
     if (lineItems.some((i) => !i.description)) { toast.error("Fill in all item descriptions"); return; }
     setLoading(true);
-    const payload = { ...form, line_items: lineItems, subtotal, tax: tax || null, total };
+    const payload = { ...form, line_items: lineItems, subtotal, tax: tax || null, total, order_confirmation_id: form.order_confirmation_id || null };
     try {
       const res = await fetch(
         mode === "create" ? "/api/invoices" : `/api/invoices/${initialData.id}`,
@@ -147,6 +148,17 @@ export default function InvoiceForm({
           </Button>
         </div>
       </div>
+
+      {initialData?.order_confirmation_id && initialData?.order_number && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-2 text-sm text-blue-700">
+          Linked to Order <span className="font-semibold">#{initialData.order_number}</span>
+          {initialData?.remaining_balance != null && (
+            <span className="ml-2 text-blue-500">
+              (Remaining balance: ${Number(initialData.remaining_balance).toLocaleString("en-US", { minimumFractionDigits: 2 })})
+            </span>
+          )}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left — client + line items */}
